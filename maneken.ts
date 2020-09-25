@@ -34,7 +34,7 @@ export function manecen<T>(o: T) {
       change((state: T) => c(state, x))
     );
 
-  const _mapMutator = (s: T) => state;
+  const _mapMutator: MapMutator<T> = (s: T) => state;
   const map = <Q>(_mapMutator: MapMutator<T, Q>) => {
     const _mapState = { ...manecen(_mapMutator(state)), _mapMutator };
     mapsChildren.add(_mapState);
@@ -83,8 +83,11 @@ event(234);
 const storeMap = store.map((x) => x - 100);
 storeMap.watch((x) => console.log(x, "map store"));
 
-const storeMap2 = storeMap.map((x) => !!x);
+const storeMap2 = storeMap.map((x) => ({ x: x }));
 storeMap2.watch((x) => console.log(x, "map store2"));
+
+const storeMap3 = storeMap2.map(({ x }) => ({ a: x * 2 }));
+storeMap3.watch((x) => console.log(x, "map store3"));
 
 event(1);
 event(5);
