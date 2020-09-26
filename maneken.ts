@@ -9,17 +9,17 @@ import {
 } from "./type";
 
 export function manecen<T>(o: T) {
+  let state = o;
+
   const watchers = new Set() as Set<WatcherType<T>>;
   const mapsChildren = new Set() as Set<ManecenStore>;
-
-  let state = o;
 
   const getState = () => state;
 
   const change = (cheater: CheaterType<T>) => {
     state = cheater(state);
-    watchers.forEach((x) => x(state));
-    mapsChildren.forEach((x) => x.change(() => x._mapMutator(state)));
+    watchers.forEach((f) => f(state));
+    mapsChildren.forEach((x) => x.change(() => x._._mapMutator(state)));
   };
 
   const watch = (w: WatcherType<T> | WatcherType<T>[]) => {
@@ -30,18 +30,24 @@ export function manecen<T>(o: T) {
     ev: Q,
     c: CheaterOnType<T, Parameters<Q>[0]>
   ) =>
-    ev.addSubscription((x: Parameters<Q>[0]) =>
+    ev._.addSubscription((x: Parameters<Q>[0]) =>
       change((state: T) => c(state, x))
     );
 
-  const _mapMutator: MapMutator<T> = (s: T) => state;
+  const _mapMutator: MapMutator<T> = (_: T) => _;
   const map = <Q>(_mapMutator: MapMutator<T, Q>) => {
-    const _mapState = { ...manecen(_mapMutator(state)), _mapMutator };
+    const s = manecen(_mapMutator(state));
+    const _mapState = {
+      ...s,
+      _: { ...s._, _mapMutator },
+    };
     mapsChildren.add(_mapState);
     return _mapState;
   };
 
-  return { getState, change, watch, on, map, _mapMutator };
+  const _ = { _mapMutator };
+
+  return { getState, change, watch, on, map, _ };
 }
 
 export function manecenEvent<T = void>() {
@@ -49,6 +55,16 @@ export function manecenEvent<T = void>() {
   const watch = (w: WatcherType<T> | WatcherType<T>[]) => {
     Array.isArray(w) ? w.forEach((x) => watchers.add(x)) : watchers.add(w);
   };
+
+  const mapsChildren = new Set() as Set<ManecenEvent>;
+  const _mapMutator: MapMutator<T> = (_: T) => _;
+  const map = <Q>(_mapMutator: MapMutator<T, Q>) => {
+    const ev = manecenEvent<Q>();
+    ev._._mapMutator = (_mapMutator as unknown) as MapMutator<Q, any>;
+    mapsChildren.add(ev);
+    return ev;
+  };
+  const _ = { _mapMutator };
 
   const subscription = new Set() as Set<(x: T) => void>;
   const addSubscription = (x: (x: T) => void) => {
@@ -59,12 +75,17 @@ export function manecenEvent<T = void>() {
     (x: T) => {
       subscription.forEach((f) => f(x));
       watchers.forEach((f) => f(x));
+      mapsChildren.forEach((f) => f(f._._mapMutator(x)));
     },
     {
       watch,
+      map,
     },
     {
-      addSubscription,
+      _: {
+        addSubscription,
+        _mapMutator,
+      },
     }
   );
 
@@ -75,10 +96,15 @@ const store = manecen(1);
 store.watch((x) => console.log(x));
 
 const event = manecenEvent<number>();
-store.on(event, (s, d) => s + d);
+const eventMap = event.map((x) => "string " + x);
+eventMap.watch((x) => console.log(x));
 
-event(1);
-event(234);
+const stringStore = manecen("");
+stringStore.watch(x => console.log(x, 'store string'))
+stringStore.on(eventMap, (x, d) => x + d);
+eventMap("s");
+
+store.on(event, (s, d) => s + d);
 
 const storeMap = store.map((x) => x - 100);
 storeMap.watch((x) => console.log(x, "map store"));
@@ -89,7 +115,4 @@ storeMap2.watch((x) => console.log(x, "map store2"));
 const storeMap3 = storeMap2.map(({ x }) => ({ a: x * 2 }));
 storeMap3.watch((x) => console.log(x, "map store3"));
 
-event(1);
-event(5);
-
-store.change(() => 40);
+//store.change(() => 40);
