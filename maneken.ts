@@ -71,8 +71,11 @@ storeMap2.watch((x) => console.log(x));
 storeMap.watch((x) => console.log(x));
 
 const event = manecenEvent<number>();
+
 const eventMap = event.map((x) => ({ x }));
-eventMap.watch(x => console.log(x, 'event map'))
+const eventMap2 = eventMap.map((x) => ({ ...x, a: "sfa" }));
+eventMap2.watch((x) => console.log(x));
+eventMap.watch((x) => console.log(x, "event map"));
 store.on(event, (s, d) => s + d);
 event(1);
 event(1);
