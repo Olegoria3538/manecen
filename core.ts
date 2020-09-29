@@ -1,11 +1,5 @@
-import { manecenMap, manecenWatch } from "./maneken-staf";
-import {
-  ManecenEvent,
-  ManecenStore,
-  MapMutator,
-  Unit,
-  UnitType,
-} from "./type";
+import { manecenMap, manecenTo, manecenWatch } from "./maneken-staf";
+import { ManecenEvent, ManecenStore, MapMutator, Unit, UnitType } from "./type";
 
 export function manecenCore<T, U extends UnitType = UnitType>({
   mapFc,
@@ -16,16 +10,19 @@ export function manecenCore<T, U extends UnitType = UnitType>({
   ) => U extends "STORE" ? ManecenStore<Q> : ManecenEvent<Q>;
   unit: UnitType;
 }): Unit<T, U> {
-  const watch = manecenWatch<T>();
-  const map = manecenMap<T, U>(mapFc);
+  const { shotWatchers, watch } = manecenWatch<T>();
+  const { map, mapsChildren, _mapMutator } = manecenMap<T, U>(mapFc);
+  const { to, toShot } = manecenTo<T>();
 
   return {
-    watchers: watch.watchers,
-    watch: watch.watch,
-    map: map.map,
-    mapsChildren: map.mapsChildren,
+    to,
+    toShot,
+    shotWatchers,
+    watch,
+    map,
+    mapsChildren,
     _: {
-      _mapMutator: map._mapMutator,
+      _mapMutator,
       node: unit,
     },
   };

@@ -1,16 +1,13 @@
 import { manecenCore } from "./core";
-import {
-  CheaterOnType,
-  CheaterType,
-  ManecenFn,
-  ManecenEvent,
-  ManecenStore,
-} from "./type";
+import { CheaterOnType, CheaterType, ManecenEvent, ManecenStore } from "./type";
 
 export function manecen<T>(o: T): ManecenStore<T> {
   let state = o;
 
-  const { watchers, watch, mapsChildren, map, _ } = manecenCore<T, "STORE">({
+  const { watch, shotWatchers, mapsChildren, to, toShot, map, _ } = manecenCore<
+    T,
+    "STORE"
+  >({
     mapFc: (mutator) => manecen(mutator(state)),
     unit: "STORE",
   });
@@ -20,12 +17,13 @@ export function manecen<T>(o: T): ManecenStore<T> {
   const change = (cheater: CheaterType<T>) => {
     const _s = cheater(state);
     if (state === _s) return;
-    state = cheater(state);
-    watchers.forEach((f) => f(state));
+    state = _s;
+    shotWatchers(state);
+    toShot(state);
     mapsChildren.forEach((x) => x.change(() => x._._mapMutator(state)));
   };
 
-  const on = <Q extends ManecenFn = ManecenFn>(
+  const on = <E, Q extends ManecenEvent<E> = ManecenEvent<E>>(
     ev: Q,
     c: CheaterOnType<T, Parameters<Q>[0]>
   ) =>
@@ -33,11 +31,14 @@ export function manecen<T>(o: T): ManecenStore<T> {
       change((state: T) => c(state, x))
     );
 
-  return { getState, change, watch, on, map, _ };
+  return { getState, change, watch, on, map, to, _ };
 }
 
 export function manecenEvent<T = void>(): ManecenEvent<T> {
-  const { watchers, watch, mapsChildren, map, _ } = manecenCore<T, "EVENT">({
+  const { watch, shotWatchers, mapsChildren, map, to, toShot, _ } = manecenCore<
+    T,
+    "EVENT"
+  >({
     mapFc: () => manecenEvent(),
     unit: "EVENT",
   });
@@ -50,10 +51,12 @@ export function manecenEvent<T = void>(): ManecenEvent<T> {
   const ev = Object.assign(
     (x: T) => {
       subscription.forEach((f) => f(x));
-      watchers.forEach((f) => f(x));
+      shotWatchers(x);
+      toShot(x);
       mapsChildren.forEach((f) => f(f._._mapMutator(x)));
     },
     {
+      to,
       watch,
       map,
       _: { ..._, addSubscription },
@@ -64,18 +67,14 @@ export function manecenEvent<T = void>(): ManecenEvent<T> {
 }
 
 const store = manecen(1);
-
-const storeMap = store.map((x) => JSON.stringify(x));
-const storeMap2 = store.map((x) => ({ x }));
-storeMap2.watch((x) => console.log(x));
-storeMap.watch((x) => console.log(x));
+const store2 = manecen(234);
 
 const event = manecenEvent<number>();
+const event2 = manecenEvent<number>();
+event2.watch((x) => console.log(x, "event"));
 
-const eventMap = event.map((x) => ({ x }));
-const eventMap2 = eventMap.map((x) => ({ ...x, a: "sfa" }));
-eventMap2.watch((x) => console.log(x));
-eventMap.watch((x) => console.log(x, "event map"));
+store.to([store2, event2]);
+
 store.on(event, (s, d) => s + d);
 event(1);
 event(1);
