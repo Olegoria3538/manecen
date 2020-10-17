@@ -21,7 +21,7 @@ export function manecenCore<T, U extends UnitType = UnitType>({
     watch,
     map,
     mapsChildren,
-    _: {
+    bedrock: {
       _mapMutator,
       node: unit,
     },

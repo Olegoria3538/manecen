@@ -32,10 +32,8 @@ export interface Unit<T, U extends UnitType> {
   watch: (w: WatcherType<T> | WatcherType<T>[]) => void;
   toShot: (state: T) => void;
   to: (w: ManecenAllUnit<T> | ManecenAllUnit<T>[]) => void;
-  map: <Q>(
-    _mapMutator: MapMutator<T, Q>
-  ) => U extends "STORE" ? ManecenStore<Q> : ManecenEvent<Q>;
-  _: {
+  map: <Q = any>(_mapMutator: MapMutator<T, Q>) => UnitApply<Q, U>;
+  bedrock: {
     _mapMutator: MapMutator<T>;
     node: UnitType;
   };
@@ -58,7 +56,7 @@ export interface ManecenStore<T> extends UnitOmit<T, "STORE"> {
 
 export interface ManecenEvent<T> extends UnitOmit<T, "EVENT"> {
   (x: T): void;
-  _: {
+  bedrock: {
     addSubscription: (x: (x: T) => void) => void;
-  } & UnitOmit<T>["_"];
+  } & UnitOmit<T>["bedrock"];
 }

@@ -27,7 +27,7 @@ export function manecenMap<T, U extends UnitType = UnitType>(
   const _mapMutator: MapMutator<T> = (_: T) => _;
   const map = <Q>(_mapMutator: MapMutator<T, Q>) => {
     const unit = mapFc(_mapMutator);
-    unit._._mapMutator = (_mapMutator as unknown) as MapMutator<Q, any>;
+    unit.bedrock._mapMutator = (_mapMutator as unknown) as MapMutator<Q, any>;
     mapsChildren.add(unit);
     return unit;
   };
@@ -39,11 +39,11 @@ export function manecenTo<T>() {
   const toList = new Set() as Set<ManecenAllUnit<T>>;
   const toShot = (state: T) => {
     toList.forEach((x) => {
-      if (x._.node === "STORE") {
+      if (x.bedrock.node === "STORE") {
         const store = x as ManecenStore<T>;
         store.change(() => state);
       }
-      if (x._.node === "EVENT") {
+      if (x.bedrock.node === "EVENT") {
         const EVENT = x as ManecenEvent<T>;
         EVENT(state);
       }
