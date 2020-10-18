@@ -27,7 +27,7 @@ export function manecenMap<T, U extends UnitType = UnitType>(
   const _mapMutator: MapMutator<T> = (_: T) => _;
   const map = <Q>(_mapMutator: MapMutator<T, Q>) => {
     const unit = mapFc(_mapMutator);
-    unit.bedrock._mapMutator = (_mapMutator as unknown) as MapMutator<Q, any>;
+    unit.bedrock._mapMutator = _mapMutator;
     mapsChildren.add(unit);
     return unit;
   };

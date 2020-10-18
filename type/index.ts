@@ -1,8 +1,8 @@
-import { manecenEvent } from "../maneken";
-
 interface Callable<R> {
   (...args: any[]): R;
 }
+
+export type TypeStore<T extends ManecenStore<any>> = ReturnType<T["getState"]>;
 
 export type MapCoreFc = <T, Q, U extends UnitType>(
   _mapMutator: MapMutator<T, Q>
@@ -34,7 +34,7 @@ export interface Unit<T, U extends UnitType> {
   to: (w: ManecenAllUnit<T> | ManecenAllUnit<T>[]) => void;
   map: <Q = any>(_mapMutator: MapMutator<T, Q>) => UnitApply<Q, U>;
   bedrock: {
-    _mapMutator: MapMutator<T>;
+    _mapMutator: MapMutator<any>;
     node: UnitType;
   };
 }

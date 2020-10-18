@@ -1,5 +1,12 @@
+import { type } from "os";
 import { manecenCore } from "./core";
-import { CheaterOnType, CheaterType, ManecenEvent, ManecenStore } from "./type";
+import {
+  CheaterOnType,
+  CheaterType,
+  ManecenEvent,
+  ManecenStore,
+  TypeStore,
+} from "./type";
 
 export function manecen<T>(o: T): ManecenStore<T> {
   let state = o;
@@ -92,24 +99,50 @@ export function manecenSample<T, Q, Y>({
   return ev;
 }
 
+type FFFF = {
+  F: any;
+};
+
+export function manecenCombine<T extends { [k: string]: ManecenStore<any> }>(
+  o: T
+): ManecenStore<{ [K in keyof T]: TypeStore<T[K]> }> {
+  const stores = Object.entries(o);
+  const store = manecen(
+    stores
+      .map((x) => ({ [x[0]]: x[1].getState() }))
+      .reduce((a, b) => ({ ...a, ...b }), {}) as {
+      [K in keyof T]: TypeStore<T[K]>;
+    }
+  );
+  stores.forEach((x) =>
+    x[1].watch((q) => store.change((z) => ({ ...z, [x[0]]: q })))
+  );
+
+  return store;
+}
+
 const store = manecen<number>(1);
 const store2 = manecen(234);
 
-const event = manecenEvent<number>();
-const event2 = manecenEvent<number>();
-event2.watch((x) => console.log(x, "event"));
-store2.watch((x) => console.log(x, "store"));
-
-store.to([store2, event2]);
-
-const eventMap = { f: event.map((x) => String(x)) };
-
-const sample = manecenSample({
-  source: store.map((x) => x + 1),
-  clock: event.map<string>((x) => String(x)),
-  fn: (x, y) => ({ x, y }),
+const com = manecenCombine({
+  f: store,
+  A: store2,
+  sdf: store.map((x) => ({ x })),
 });
 
-sample.watch((x) => console.log(x, "sample"));
+com.watch((x) => console.log(x));
 
-event(123);
+store.change((x) => x + 10);
+store.change((x) => x + 10);
+
+type AnyObject = { [k: string]: any };
+
+const b = <T extends AnyObject>(o: T): T => {
+  const ar = Object.entries(o);
+  const res = ar
+    .map((x) => ({ [x[0]]: x[1] }))
+    .reduce((a, b) => ({ ...a, ...b }), {}) as T;
+  return res;
+};
+
+const d = b({ dfs: "sfd", v: 1231 });
