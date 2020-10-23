@@ -1,11 +1,12 @@
-import { type } from "os";
 import { manecenCore } from "./core";
 import {
   CheaterOnType,
   CheaterType,
   ManecenEvent,
   ManecenStore,
+  NodeManecen,
   TypeStore,
+  UnitOmit,
 } from "./type";
 
 export function manecen<T>(o: T): ManecenStore<T> {
@@ -83,25 +84,21 @@ export function manecenEvent<T = void>(): ManecenEvent<T> {
   return ev;
 }
 
-export function manecenSample<T, Q, Y>({
+export function manecenSample<T, C, Y = T>({
   source,
   clock,
-  fn,
+  fn = (x) => (x as unknown) as Y,
 }: {
   source: ManecenStore<T>;
-  clock: ManecenEvent<Q>;
-  fn: (sourceData: T, clockData: Q) => Y;
+  clock: NodeManecen<C>;
+  fn?: (sourceData: T, clockData: C) => Y;
 }) {
-  const ev = manecenEvent<ReturnType<typeof fn>>();
+  const ev = manecenEvent<Y>();
   clock.watch((x) => {
     ev(fn(source.getState(), x));
   });
   return ev;
 }
-
-type FFFF = {
-  F: any;
-};
 
 export function manecenCombine<T extends { [k: string]: ManecenStore<any> }>(
   o: T
@@ -117,32 +114,25 @@ export function manecenCombine<T extends { [k: string]: ManecenStore<any> }>(
   stores.forEach((x) =>
     x[1].watch((q) => store.change((z) => ({ ...z, [x[0]]: q })))
   );
+  return store;
+}
 
+export function manecenRestore<T>(unit: NodeManecen<T>) {
+  const store = manecen<T>(null);
+  unit.watch((x) => store.change(() => x));
   return store;
 }
 
 const store = manecen<number>(1);
-const store2 = manecen(234);
+const ev = manecenEvent<number>();
 
-const com = manecenCombine({
-  f: store,
-  A: store2,
-  sdf: store.map((x) => ({ x })),
+manecenSample({
+  source: manecenCombine({ s: store, a: store.map(String) }),
+  clock: ev,
 });
 
-com.watch((x) => console.log(x));
+const restore = manecenRestore(ev);
+restore.watch((x) => console.log(x));
 
-store.change((x) => x + 10);
-store.change((x) => x + 10);
-
-type AnyObject = { [k: string]: any };
-
-const b = <T extends AnyObject>(o: T): T => {
-  const ar = Object.entries(o);
-  const res = ar
-    .map((x) => ({ [x[0]]: x[1] }))
-    .reduce((a, b) => ({ ...a, ...b }), {}) as T;
-  return res;
-};
-
-const d = b({ dfs: "sfd", v: 1231 });
+ev(3);
+ev(5);

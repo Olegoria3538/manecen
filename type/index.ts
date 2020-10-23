@@ -45,6 +45,8 @@ export interface UnitOmit<T, U extends UnitType = UnitType>
     "watchers" | "mapsChildren" | "shotWatchers" | "toShot"
   > {}
 
+export type NodeManecen<T> = UnitOmit<T, any>;
+
 export interface ManecenStore<T> extends UnitOmit<T, "STORE"> {
   getState: () => T;
   change: (cheater: CheaterType<T>) => void;
