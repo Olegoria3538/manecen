@@ -127,9 +127,9 @@ const store = manecen<number>(1);
 const ev = manecenEvent<number>();
 
 manecenSample({
-  source: manecenCombine({ s: store, a: store.map(String) }),
+  source: manecenCombine({ s: store, a: manecenRestore(store.map(String)) }),
   clock: ev,
-});
+}).watch((x) => console.log(x));
 
 const restore = manecenRestore(ev);
 restore.watch((x) => console.log(x));
