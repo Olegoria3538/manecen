@@ -8,6 +8,8 @@ import {
   TypeStore,
   UnitOmit,
 } from "./type";
+import { graph, graphCreate } from "./graph";
+import { createEvent, createGuard, createNode, createStore } from "./node";
 
 export function manecen<T>(o: T): ManecenStore<T> {
   let state = o;
@@ -123,16 +125,25 @@ export function manecenRestore<T>(unit: NodeManecen<T>) {
   return store;
 }
 
-const store = manecen<number>(1);
-const ev = manecenEvent<number>();
+export function manecenGuard<T>(
+  unit: NodeManecen<T>,
+  filter: (x: T) => Boolean
+) {
+  const ev = manecenEvent<T>();
+  unit.watch((x) => {
+    if (filter(x)) ev(x);
+  });
+  return ev;
+}
 
-manecenSample({
-  source: manecenCombine({ s: store, a: manecenRestore(store.map(String)) }),
-  clock: ev,
-}).watch((x) => console.log(x));
+const store = createStore(1);
 
-const restore = manecenRestore(ev);
-restore.watch((x) => console.log(x));
+const f = createEvent<number>();
 
-ev(3);
-ev(5);
+const g = createGuard(f, (x) => x > 10);
+
+g.watch((x) => console.log(x));
+f(10);
+f(11);
+f(11);
+f(8);
