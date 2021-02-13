@@ -32,6 +32,7 @@ export type GraphCreateType = {
   ) => void;
   addFirst: (node: NodeManeken<any>, x: any) => void;
   addLast: (node: NodeManeken<any>, x: any) => void;
+  getLast: (node: NodeManeken<any>) => any;
 };
 
 export const graphCreate = (): GraphCreateType => {
@@ -78,6 +79,11 @@ export const graphCreate = (): GraphCreateType => {
     const d = connections.get(node);
     d.last = x;
   };
+  const getLast = (node: NodeManeken<any>) => {
+    const d = connections.get(node);
+    return d.last;
+  };
+
   return {
     connections,
     addNode,
@@ -87,7 +93,8 @@ export const graphCreate = (): GraphCreateType => {
     addOn,
     addFirst,
     addLast,
+    getLast,
   };
 };
 
-export const graph = graphCreate();
+export const graphMain = graphCreate();
