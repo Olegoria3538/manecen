@@ -4,6 +4,7 @@ const main = createBlackBox(({ createNode }) => {
   const state = createNode<string[]>([]);
   const addTodoNode = createNode<string>();
   state.on(addTodoNode, (s, x) => [...s, x]);
+
   return { in: addTodoNode, out: state };
 });
 
